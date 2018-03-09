@@ -1,0 +1,48 @@
+version: '2'
+services:
+  elasticsearch:
+    image: elasticsearch:2.4.0
+    container_name: elasticsearch
+    restart: always
+    network_mode: "bridge"
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - ./elasticsearch/data:/usr/share/elasticsearch/datadocker-file
+  filebeat:
+    image: prima/filebeat:1.3.1
+    container_name: filebeat
+    restart: always
+    network_mode: "bridge"
+    extra_hosts:
+      - "logstash:192.168.0.131"
+    volumes:
+      - ./filebeat/conf/filebeat.yml:/filebeat.yml
+      - ./filebeat/registry:/etc/registry
+      - /tmp:/tmp
+      - /Users/nhsoft/work/pintuan-dashboard/log:/dashboard
+  kibana:
+    image: kibana:4.6.6
+    container_name: kibana
+    restart: always
+    network_mode: "bridge"
+    ports:
+      - "5601:5601"
+    external_links:
+      - elasticsearch:elasticsearch
+  logstash:
+    image: logstash:2.4.1
+    container_name: logstash
+    restart: always
+    network_mode: "bridge"
+    ports:
+      - "5044:5044"
+      - "8080:8080"
+    volumes:
+      - ./logstash/conf:/config-dir
+      - ./logstash/patterns:/opt/logstash/patterns
+      # - /Users/nhsoft/work/pintuan-dashboard/log:/dashboard
+    external_links:
+      - elasticsearch:elasticsearch
+    command: logstash -f /config-dir
